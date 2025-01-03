@@ -1,0 +1,29 @@
+<!doctype html/>
+<html>
+	<head>
+		<title>PCBCAM</title>
+	</head>
+	<style>
+		* {
+			margin: 0;
+			border: 0;
+			padding: 0;
+		}
+	</style>
+	<body style="background-color: black">
+		<canvas id="canvas" width=500" height=500" style="border: 2px solid white; margin: 10px;"></canvas>
+		<input type="file" id="input" value="./config.txt" style="color: white">
+	</body>
+	<script>
+		const fileInput = document.getElementById("input")
+		const file = document.getElementById("input").file
+		console.log(file)
+
+	
+		const canvas = document.getElementById("canvas")
+		const ctx = canvas.getContext("2d")
+		
+		ctx.strokeStyle = "white"
+		ctx.strokeRect(0,0,50,50)
+	</script>
+</html>

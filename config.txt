@@ -1,0 +1,8 @@
+stock dimensions: x, y
+endmill diameter
+trace width
+line: p1, p2
+square: x, y
+hole: depth
+milling depth
+predefined geometry groups
