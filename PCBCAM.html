@@ -3,24 +3,87 @@
 	<head>
 		<title>PCBCAM</title>
 	</head>
-	<body style="background-color: rgb(15, 77, 0)">
-		<canvas id="canvas" width=600" height=600" style="background-color: black;"></canvas>
-		<textarea></textarea>
+	<body style="background-color: rgb(0, 67, 129)">
+		<canvas id="canvas" width=800 height=800 style="background-color: black;"></canvas>
+		<textarea readonly id="text-area" style="width: 800px; height: 800px; background-color: rgb(0, 67, 129); color: white; resize: none; font-family: monospace; font-size: 15px; border: none"></textarea>
 	</body>
 	<script>
 		const canvas = document.getElementById("canvas")
 		const ctx = canvas.getContext("2d")
-		const zoomIn = document.getElementById("zoom-in")
-		const zoomOut = document.getElementById("zoom-out")
-
-		let scale = 7
-		//offset window position so that lines at 0,0 don't get cut off
-		let windowPos = [0,0]
-		let boardX = 70.4
-		let boardY = 101
-		let showNames = false
-		let showPackage = true
+		const textArea = document.getElementById("text-area")
 		
+		json = {
+			"config" : {
+				"scale" : 7,
+				"windowPos" : [0,0],
+				"boardX" : 70.4,
+				"boardY" : 101,
+				"showNames" : false,
+				"showPackage" : true
+			},
+			"devices" : [
+				{
+					"name" : "555",
+					"placement" : [10,5],
+					"pattern" : [2, 4, 7.6, 2.2],
+					"drill" : true,
+					"pad" : [1.75, 1.75],
+				},
+				{
+					"name" : "5V",
+					"placement" : [25,25],
+					"pattern": [1,1,0,0],
+					"drill": false,
+					"pad": [5,5],
+				},
+				{
+					"name" : "GND",
+					"placement" : [20,20],
+					"pattern": [1,1,0,0],
+					"drill": false,
+					"pad": [5,5],
+				},
+				{
+					"name" : "1KOHM",
+					"placement" : [30,10],
+					"pattern": [2,1,4,0],
+					"drill": true,
+					"pad": [1.75,1.75],
+				},
+				{
+					"name" : "100KOHM",
+					"placement" : [20,25],
+					"pattern": [2,1,4,0],
+					"drill": true,
+					"pad": [1.75,1.75],
+				},
+				{
+					"name" : "LED",
+					"placement" : [35,40],
+					"pattern": [2,1,4,0],
+					"drill": true,
+					"pad": [1.75,1.75],
+				},
+				{
+					"name" : "1MFD",
+					"placement" : [31,14],
+					"pattern": [2,1,4,0],
+					"drill": true,
+					"pad": [1.75,1.75],
+				},
+				{
+					"name" : "220OHM",
+					"placement" : [45,21],
+					"pattern": [2,1,4,0],
+					"drill": true,
+					"pad": [1.75,1.75],
+				},
+			],
+			"traces" : [],
+		}
+		
+		let devices = []
+
 		class Device {
 			constructor(name, placement, pattern, drill, pad) {
 				this.name = name
@@ -38,8 +101,8 @@
 			draw(scale, windowPos, showNames) {
 				for (let i = 0; i < this.ypat; i++) {
 					for (let j = 0; j < this.xpat; j++) {
-						let x = ((this.xpos + (j * this.xspace)) * scale) + windowPos[0]
-						let y = ((this.ypos + (i * this.yspace)) * scale) + windowPos[1]
+						let x = ((this.xpos + (j * this.xspace)) * scale) + json.config.windowPos[0]
+						let y = ((this.ypos + (i * this.yspace)) * scale) + json.config.windowPos[1]
 						// connections
 						ctx.fillStyle = "white"
 						ctx.beginPath()
@@ -59,18 +122,16 @@
 						ctx.stroke()
 					}
 				}
-				let x = this.xpos*scale+windowPos[0]
-				let y = this.ypos*scale+windowPos[1]
+				let x = this.xpos*scale+json.config.windowPos[0]
+				let y = this.ypos*scale+json.config.windowPos[1]
 				// name
-				let textOffsetX = -20
-				let textOffsetY = -15
 				if (showNames) {
 					ctx.beginPath()
-					ctx.font = "15px serif"
-					ctx.fillText(this.name, x+textOffsetX, y+textOffsetY)
+					ctx.font = `${2 * scale}px monospace`
+					ctx.fillText(this.name, x, y)
 				}
 				// package
-				if (showPackage) {
+				if (json.config.showPackage) {
 					if (this.packageShape == "rect") {
 						ctx.beginPath()
 						ctx.rect(this.originX+this.packageOffsetX, this.originY+this.packageOffsetY, this.packageX*scale, this.packageY*scale)
@@ -85,70 +146,70 @@
 			}
 		}
 
-		devices = [
-			new Device("555", [10,5], [2,4,7.6,2.2], true, [1.75,1.75]),
-			new Device("5V", [25,25], [1,1,0,0], false, [5,5]),
-			new Device("GND", [20,20], [1,1,0,0], false, [5,5]),
-			new Device("1KΩ", [30,10], [2,1,4,0], true, [1.75,1.75]),
-			new Device("100KΩ", [20,25], [2,1,4,0], true, [1.75, 1.75]),
-			new Device("LED", [35, 40], [2,1,4,0], true, [1.75, 1.75]),
-			new Device("1MFD", [31, 14], [2,1,4,0], true, [1.75, 1.75]),
-			new Device("220Ω", [45, 21], [2,1,4,0], true, [1.75, 1.75])
-		]
+		for (let device of json.devices) {
+			devices.push(new Device(device.name, device.placement, device.pattern, device.drill, device.pad))
+		}
 
 		function zoom(multiplier) {
-			scale = scale * multiplier
+			json.config.scale = json.config.scale * multiplier
 			render()
 		}
 
 		function render() {
+			// update text area to recent json
+			textArea.textContent = JSON.stringify(json)
 			// clears canvas
 			ctx.clearRect(0, 0, canvas.width, canvas.height)
 
 			// draws board
-			ctx.strokeStyle = "white"
+			ctx.strokeStyle = "red"
 			ctx.beginPath()
-			ctx.rect(windowPos[0], windowPos[1], boardX*scale, boardY*scale)
+			ctx.rect(json.config.windowPos[0], json.config.windowPos[1], json.config.boardX*json.config.scale, json.config.boardY*json.config.scale)
 			ctx.stroke()
 
 			// draws devices
 			for (let device of devices) {
-				device.draw(scale, windowPos,showNames)
+				device.draw(json.config.scale, json.config.windowPos,json.config.showNames)
 			}
 		}
 
 		render()
 		
 		// keyboard navigation
-		let movementFactor = 0.5
+		let movementFactor = 1
 		document.addEventListener("keydown", (e) => {
-			e.preventDefault()
 			switch (e.key) {
 				case "ArrowUp":
-					windowPos[1]+=movementFactor*scale
+					e.preventDefault()
+					json.config.windowPos[1]+=movementFactor*json.config.scale
 					render()
 					break
 				case "ArrowDown":
-					windowPos[1]-=movementFactor*scale
+					e.preventDefault()
+					json.config.windowPos[1]-=movementFactor*json.config.scale
 					render()
 					break
 				case "ArrowLeft":
-					windowPos[0]+=movementFactor*scale
+					e.preventDefault()
+					json.config.windowPos[0]+=movementFactor*json.config.scale
 					render()
 					break
 				case "ArrowRight":
-					windowPos[0]-=movementFactor*scale
+					e.preventDefault()
+					json.config.windowPos[0]-=movementFactor*json.config.scale
 					render()
 					break
 				case "=":
+					e.preventDefault()
 					zoom(2)
 					break
 				case "-": 
+					e.preventDefault()
 					zoom(0.5)
 					break 
-					// toggle device names
-				case "n":
-					showNames = !showNames
+				case ".":
+					e.preventDefault()
+					json.config.showNames = !json.config.showNames
 					render()
 					break
 			}
