@@ -4,8 +4,8 @@
 		<title>PCBCAM</title>
 	</head>
 	<body style="background-color: rgb(0, 67, 129)">
-		<canvas id="canvas" width=800 height=800 style="background-color: black;"></canvas>
-		<textarea readonly id="text-area" style="width: 800px; height: 800px; background-color: rgb(0, 67, 129); color: white; resize: none; font-family: monospace; font-size: 15px; border: none"></textarea>
+		<canvas id="canvas" width=700 height=700 style="background-color: black;"></canvas>
+		<textarea readonly id="text-area" style="width: 700px; height: 700px; background-color: rgb(0, 67, 129); color: white; resize: none; font-family: monospace; font-size: 15px; border: none"></textarea>
 	</body>
 	<script>
 		const canvas = document.getElementById("canvas")
@@ -14,69 +14,34 @@
 		
 		json = {
 			"config" : {
-				"scale" : 7,
+				"scale" : 6,
 				"windowPos" : [0,0],
 				"boardX" : 70.4,
 				"boardY" : 101,
 				"showNames" : false,
-				"showPackage" : true
+				"showPackage" : false
 			},
 			"devices" : [
 				{
-					"name" : "555",
-					"placement" : [10,5],
-					"pattern" : [2, 4, 7.6, 2.2],
-					"drill" : true,
-					"pad" : [1.75, 1.75],
-				},
-				{
-					"name" : "5V",
-					"placement" : [25,25],
-					"pattern": [1,1,0,0],
-					"drill": false,
-					"pad": [5,5],
-				},
-				{
-					"name" : "GND",
-					"placement" : [20,20],
-					"pattern": [1,1,0,0],
-					"drill": false,
-					"pad": [5,5],
-				},
-				{
-					"name" : "1KOHM",
-					"placement" : [30,10],
-					"pattern": [2,1,4,0],
-					"drill": true,
-					"pad": [1.75,1.75],
-				},
-				{
-					"name" : "100KOHM",
-					"placement" : [20,25],
-					"pattern": [2,1,4,0],
-					"drill": true,
-					"pad": [1.75,1.75],
-				},
-				{
-					"name" : "LED",
-					"placement" : [35,40],
-					"pattern": [2,1,4,0],
-					"drill": true,
-					"pad": [1.75,1.75],
-				},
-				{
-					"name" : "1MFD",
-					"placement" : [31,14],
-					"pattern": [2,1,4,0],
-					"drill": true,
-					"pad": [1.75,1.75],
-				},
-				{
-					"name" : "220OHM",
-					"placement" : [45,21],
-					"pattern": [2,1,4,0],
-					"drill": true,
-					"pad": [1.75,1.75],
+					"name" : "Resistor",
+					"origin" : [10,10],
+                    "package" : {
+                        style : "rect",
+                        dim: [4, 1],
+                        offset: [0,0]
+                    },
+                    "points" : [
+						{
+							pos : [2, 0],
+							drill : true,
+							pad: [1.75, 1.75],
+						},
+                        {
+                            pos : [-2, 0],
+							drill : true,
+							pad: [1.75, 1.75],
+                        },
+					],
 				},
 			],
 			"traces" : [],
@@ -85,69 +50,122 @@
 		let devices = []
 
 		class Device {
-			constructor(name, placement, pattern, drill, pad) {
-				this.name = name
-				this.xpos = placement[0]
-				this.ypos = placement[1]
-				this.xpat = pattern[0]
-				this.ypat = pattern[1]
-				this.xspace = pattern[2]
-				this.yspace = pattern[3]
-				this.drill = drill
-				this.xpad = pad[0]
-				this.ypad = pad[1]
+			constructor(index, JSONDevice) {
+				this.index = index
+				this.name = JSONDevice.name
+                this.origin = JSONDevice.origin
+				this.pk = JSONDevice.package
+                this.points = JSONDevice.points
 			}
 
-			draw(scale, windowPos, showNames) {
-				for (let i = 0; i < this.ypat; i++) {
-					for (let j = 0; j < this.xpat; j++) {
-						let x = ((this.xpos + (j * this.xspace)) * scale) + json.config.windowPos[0]
-						let y = ((this.ypos + (i * this.yspace)) * scale) + json.config.windowPos[1]
-						// connections
-						ctx.fillStyle = "white"
-						ctx.beginPath()
-   						ctx.arc(x, y, 1, 0, 2 * Math.PI)
-						ctx.fill()
-						// holes
-						if (this.drill) {
-							ctx.strokeStyle = "white"
-							ctx.beginPath()
-							// 0.5 drill RADIUS
-							ctx.arc(x, y, 0.5 * scale, 0, 2 * Math.PI)
-							ctx.stroke()
-						}
-						// pads
-						ctx.beginPath()
-						ctx.rect(x - (this.xpad * scale / 2), y - (this.xpad * scale / 2), this.xpad * scale, this.ypad * scale)
-						ctx.stroke()
-					}
+            rotate() {
+                json.devices[this.index].package.dim.reverse()
+				json.devices[this.index].package.offset.reverse()
+				for (let point of json.devices[this.index].points) {
+					point.pos.reverse()
+					point.pad.reverse()
 				}
-				let x = this.xpos*scale+json.config.windowPos[0]
-				let y = this.ypos*scale+json.config.windowPos[1]
+                render()
+            }
+
+            // convert to canvas space
+            convert(coordinates, scale, windowPos=[0,0]) {
+                return [
+                    (coordinates[0] * scale) + windowPos[0], 
+                    (coordinates[1] * scale) + windowPos[1]
+                ]
+            }
+
+			draw(scale, windowPos, showNames, showPackage) {
+
+                // origin calculation
+                let cOrigin = this.convert(this.origin, scale, windowPos)
+                
 				// name
 				if (showNames) {
 					ctx.beginPath()
-					ctx.font = `${2 * scale}px monospace`
-					ctx.fillText(this.name, x, y)
+					ctx.font = `${1 * scale}px monospace`
+					ctx.fillText(this.name, cOrigin[0], cOrigin[1])
 				}
-				// package
-				if (json.config.showPackage) {
-					if (this.packageShape == "rect") {
+
+				// package/origin
+				if (showPackage) {
+
+					//origin
+					ctx.fillStyle = "red"
+					ctx.beginPath()
+					ctx.rect(cOrigin[0], 
+					cOrigin[1], 1, 1)
+					ctx.fill()
+
+					// rect package
+					if (this.pk.style == "rect") {
 						ctx.beginPath()
-						ctx.rect(this.originX+this.packageOffsetX, this.originY+this.packageOffsetY, this.packageX*scale, this.packageY*scale)
+						ctx.rect(
+							cOrigin[0] - (this.pk.dim[0] * 0.5 * scale), 
+							cOrigin[1] - (this.pk.dim[1] * 0.5 * scale), 
+							this.pk.dim[0]*scale,
+							this.pk.dim[1]*scale
+						)
 						ctx.stroke()
 					}
-					else if (this.packageShape == "circle") {
+					// circle package
+					else if (this.pk.style == "circle") {
 						ctx.beginPath()
-						ctx.arc(this.originX+this.packageOffsetX, this.originY+this.packageOffsetY, this.packageX*scale, 0, 2*Math.PI)
+						ctx.arc(
+							this.originX+this.packageOffsetX, 
+							this.originY+this.packageOffsetY, 
+							this.packageX*scale, 0, 2*Math.PI
+						)
 						ctx.stroke()
 					}
 				}
+
+                // points 
+                for (let point of this.points) {
+
+					// connections
+                    let cPoint = this.convert(point.pos, scale)
+					ctx.fillStyle = "white"
+					ctx.beginPath()
+					ctx.rect(
+						cOrigin[0] + cPoint[0], 
+						cOrigin[1] + cPoint[1], 
+						1,
+						1,
+					)
+					ctx.fill()
+
+					// holes
+                    if (point.drill) {
+                        ctx.strokeStyle = "white"
+                        ctx.beginPath()
+                        // 0.5 drill RADIUS
+                        ctx.arc(
+							cOrigin[0] + cPoint[0], 
+							cOrigin[1] + cPoint[1], 
+							0.5 * scale, 
+							0, 
+							2 * Math.PI)
+                        ctx.stroke()
+                    }
+
+					//pads
+					ctx.strokeStyle = "white"
+					ctx.beginPath()
+					ctx.rect(
+						cOrigin[0] + cPoint[0] - (point.pad[0] * 0.5 * scale), 
+						cOrigin[1] + cPoint[1] - (point.pad[1] * 0.5 * scale), 
+						point.pad[0] * scale, 
+						point.pad[1] * scale)
+					ctx.stroke()
+                }
+
 			}
 		}
 
-		for (let device of json.devices) {
-			devices.push(new Device(device.name, device.placement, device.pattern, device.drill, device.pad))
+		for (const [index, device] of json.devices.entries()) {
+			devices.push(new Device(index, device))
 		}
 
 		function zoom(multiplier) {
@@ -169,7 +187,7 @@
 
 			// draws devices
 			for (let device of devices) {
-				device.draw(json.config.scale, json.config.windowPos,json.config.showNames)
+				device.draw(json.config.scale, json.config.windowPos,json.config.showNames, json.config.showPackage)
 			}
 		}
 
@@ -200,16 +218,17 @@
 					render()
 					break
 				case "=":
-					e.preventDefault()
 					zoom(2)
 					break
 				case "-": 
-					e.preventDefault()
 					zoom(0.5)
 					break 
-				case ".":
-					e.preventDefault()
+				case "n":
 					json.config.showNames = !json.config.showNames
+					render()
+					break
+				case "p":
+					json.config.showPackage = !json.config.showPackage
 					render()
 					break
 			}
