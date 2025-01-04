@@ -1,0 +1,158 @@
+<!doctype html/>
+<html>
+	<head>
+		<title>PCBCAM</title>
+	</head>
+	<body style="background-color: rgb(15, 77, 0)">
+		<canvas id="canvas" width=600" height=600" style="background-color: black;"></canvas>
+		<textarea></textarea>
+	</body>
+	<script>
+		const canvas = document.getElementById("canvas")
+		const ctx = canvas.getContext("2d")
+		const zoomIn = document.getElementById("zoom-in")
+		const zoomOut = document.getElementById("zoom-out")
+
+		let scale = 7
+		//offset window position so that lines at 0,0 don't get cut off
+		let windowPos = [0,0]
+		let boardX = 70.4
+		let boardY = 101
+		let showNames = false
+		let showPackage = true
+		
+		class Device {
+			constructor(name, placement, pattern, drill, pad) {
+				this.name = name
+				this.xpos = placement[0]
+				this.ypos = placement[1]
+				this.xpat = pattern[0]
+				this.ypat = pattern[1]
+				this.xspace = pattern[2]
+				this.yspace = pattern[3]
+				this.drill = drill
+				this.xpad = pad[0]
+				this.ypad = pad[1]
+			}
+
+			draw(scale, windowPos, showNames) {
+				for (let i = 0; i < this.ypat; i++) {
+					for (let j = 0; j < this.xpat; j++) {
+						let x = ((this.xpos + (j * this.xspace)) * scale) + windowPos[0]
+						let y = ((this.ypos + (i * this.yspace)) * scale) + windowPos[1]
+						// connections
+						ctx.fillStyle = "white"
+						ctx.beginPath()
+   						ctx.arc(x, y, 1, 0, 2 * Math.PI)
+						ctx.fill()
+						// holes
+						if (this.drill) {
+							ctx.strokeStyle = "white"
+							ctx.beginPath()
+							// 0.5 drill RADIUS
+							ctx.arc(x, y, 0.5 * scale, 0, 2 * Math.PI)
+							ctx.stroke()
+						}
+						// pads
+						ctx.beginPath()
+						ctx.rect(x - (this.xpad * scale / 2), y - (this.xpad * scale / 2), this.xpad * scale, this.ypad * scale)
+						ctx.stroke()
+					}
+				}
+				let x = this.xpos*scale+windowPos[0]
+				let y = this.ypos*scale+windowPos[1]
+				// name
+				let textOffsetX = -20
+				let textOffsetY = -15
+				if (showNames) {
+					ctx.beginPath()
+					ctx.font = "15px serif"
+					ctx.fillText(this.name, x+textOffsetX, y+textOffsetY)
+				}
+				// package
+				if (showPackage) {
+					if (this.packageShape == "rect") {
+						ctx.beginPath()
+						ctx.rect(this.originX+this.packageOffsetX, this.originY+this.packageOffsetY, this.packageX*scale, this.packageY*scale)
+						ctx.stroke()
+					}
+					else if (this.packageShape == "circle") {
+						ctx.beginPath()
+						ctx.arc(this.originX+this.packageOffsetX, this.originY+this.packageOffsetY, this.packageX*scale, 0, 2*Math.PI)
+						ctx.stroke()
+					}
+				}
+			}
+		}
+
+		devices = [
+			new Device("555", [10,5], [2,4,7.6,2.2], true, [1.75,1.75]),
+			new Device("5V", [25,25], [1,1,0,0], false, [5,5]),
+			new Device("GND", [20,20], [1,1,0,0], false, [5,5]),
+			new Device("1KΩ", [30,10], [2,1,4,0], true, [1.75,1.75]),
+			new Device("100KΩ", [20,25], [2,1,4,0], true, [1.75, 1.75]),
+			new Device("LED", [35, 40], [2,1,4,0], true, [1.75, 1.75]),
+			new Device("1MFD", [31, 14], [2,1,4,0], true, [1.75, 1.75]),
+			new Device("220Ω", [45, 21], [2,1,4,0], true, [1.75, 1.75])
+		]
+
+		function zoom(multiplier) {
+			scale = scale * multiplier
+			render()
+		}
+
+		function render() {
+			// clears canvas
+			ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+			// draws board
+			ctx.strokeStyle = "white"
+			ctx.beginPath()
+			ctx.rect(windowPos[0], windowPos[1], boardX*scale, boardY*scale)
+			ctx.stroke()
+
+			// draws devices
+			for (let device of devices) {
+				device.draw(scale, windowPos,showNames)
+			}
+		}
+
+		render()
+		
+		// keyboard navigation
+		let movementFactor = 0.5
+		document.addEventListener("keydown", (e) => {
+			e.preventDefault()
+			switch (e.key) {
+				case "ArrowUp":
+					windowPos[1]+=movementFactor*scale
+					render()
+					break
+				case "ArrowDown":
+					windowPos[1]-=movementFactor*scale
+					render()
+					break
+				case "ArrowLeft":
+					windowPos[0]+=movementFactor*scale
+					render()
+					break
+				case "ArrowRight":
+					windowPos[0]-=movementFactor*scale
+					render()
+					break
+				case "=":
+					zoom(2)
+					break
+				case "-": 
+					zoom(0.5)
+					break 
+					// toggle device names
+				case "n":
+					showNames = !showNames
+					render()
+					break
+			}
+		})
+		
+	</script>
+</html>
