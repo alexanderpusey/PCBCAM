@@ -1,1 +1,375 @@
-{"config":{"scale":10,"windowPos":[50,30],"boardX":70.4,"boardY":101,"showNames":false,"showPackage":true},"devices":[{"name":"555","placement":[10,5],"pattern":[2,4,7.6,2.2],"drill":true,"pad":[1.75,1.75]},{"name":"5V","placement":[25,25],"pattern":[1,1,0,0],"drill":false,"pad":[5,5]},{"name":"GND","placement":[20,20],"pattern":[1,1,0,0],"drill":false,"pad":[5,5]},{"name":"1KOHM","placement":[30,10],"pattern":[2,1,4,0],"drill":true,"pad":[1.75,1.75]},{"name":"100KOHM","placement":[20,25],"pattern":[2,1,4,0],"drill":true,"pad":[1.75,1.75]},{"name":"LED","placement":[35,40],"pattern":[2,1,4,0],"drill":true,"pad":[1.75,1.75]},{"name":"1MFD","placement":[31,14],"pattern":[2,1,4,0],"drill":true,"pad":[1.75,1.75]},{"name":"220OHM","placement":[45,21],"pattern":[2,1,4,0],"drill":true,"pad":[1.75,1.75]}],"traces":[]}
+{
+    "config": {
+        "scale": 1,
+        "windowPos": [
+            0,
+            0
+        ],
+        "boardX": 70.4,
+        "boardY": 101,
+        "showNames": true,
+        "showPackages": true,
+        "showCoordinates": true
+    },
+    "devices": [
+        {
+            "name": "555 Timer",
+            "origin": [
+                0,
+                0
+            ],
+            "package": {
+                "style": "rect",
+                "dim": [
+                    6.2,
+                    9.3
+                ],
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "points": [
+                {
+                    "pos": [
+                        -3.75,
+                        3.6
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        -3.75,
+                        1.2
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        -3.75,
+                        -1.2
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        -3.75,
+                        -3.6
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        3.75,
+                        3.6
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        3.75,
+                        1.2
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        3.75,
+                        -1.2
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        3.75,
+                        -3.6
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "5V",
+            "origin": [
+                0,
+                0
+            ],
+            "points": [
+                {
+                    "pos": [
+                        0,
+                        0
+                    ],
+                    "drill": false,
+                    "pad": [
+                        7,
+                        7
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "GND",
+            "origin": [
+                0,
+                0
+            ],
+            "points": [
+                {
+                    "pos": [
+                        0,
+                        0
+                    ],
+                    "drill": false,
+                    "pad": [
+                        7,
+                        7
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "1KOHM",
+            "origin": [
+                0,
+                0
+            ],
+            "package": {
+                "style": "rect",
+                "dim": [
+                    6.3,
+                    2.25
+                ],
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "points": [
+                {
+                    "pos": [
+                        5,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        -5,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "100KOHM",
+            "origin": [
+                0,
+                0
+            ],
+            "package": {
+                "style": "rect",
+                "dim": [
+                    6.3,
+                    2.25
+                ],
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "points": [
+                {
+                    "pos": [
+                        5,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        -5,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "220OHM",
+            "origin": [
+                0,
+                0
+            ],
+            "package": {
+                "style": "rect",
+                "dim": [
+                    2.25,
+                    6.3
+                ],
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "points": [
+                {
+                    "pos": [
+                        0,
+                        5
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        0,
+                        -5
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "1MFD",
+            "origin": [
+                0,
+                0
+            ],
+            "package": {
+                "style": "circle",
+                "dim": [
+                    5,
+                    5
+                ],
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "points": [
+                {
+                    "pos": [
+                        1.25,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        -1.25,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "LED",
+            "origin": [
+                0,
+                0
+            ],
+            "package": {
+                "style": "circle",
+                "dim": [
+                    5.4,
+                    5.4
+                ],
+                "offset": [
+                    0,
+                    0
+                ]
+            },
+            "points": [
+                {
+                    "pos": [
+                        1.5,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                },
+                {
+                    "pos": [
+                        -1.5,
+                        0
+                    ],
+                    "drill": true,
+                    "pad": [
+                        1.75,
+                        1.75
+                    ]
+                }
+            ]
+        }
+    ],
+    "traces": []
+}

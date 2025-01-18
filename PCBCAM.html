@@ -3,51 +3,19 @@
 	<head>
 		<title>PCBCAM</title>
 	</head>
-	<body style="background-color: rgb(0, 67, 129)">
+	<body style="background-color: black">
 		<canvas id="canvas" width=700 height=700 style="background-color: black;"></canvas>
-		<textarea readonly id="text-area" style="width: 700px; height: 700px; background-color: rgb(0, 67, 129); color: white; resize: none; font-family: monospace; font-size: 15px; border: none"></textarea>
+		<textarea readonly id="text-area" style="width: 700px; height: 700px; background-color: black; color: white; resize: none; font-family: monospace; font-size: 15px; border: none"></textarea>
 	</body>
 	<script>
+		json = 
+        {"config":{"scale":1,"windowPos":[0,0],"boardX":70.4,"boardY":101,"showNames":true,"showPackages":true,"showCoordinates":true},"devices":[{"name":"555 Timer","origin":[0,0],"package":{"style":"rect","dim":[6.2,9.3],"offset":[0,0]},"points":[{"pos":[-3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-3.6],"drill":true,"pad":[1.75,1.75]}]},{"name":"5V","origin":[0,0],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"GND","origin":[0,0],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"1KOHM","origin":[0,0],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"100KOHM","origin":[0,0],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"220OHM","origin":[0,0],"package":{"style":"rect","dim":[2.25,6.3],"offset":[0,0]},"points":[{"pos":[0,5],"drill":true,"pad":[1.75,1.75]},{"pos":[0,-5],"drill":true,"pad":[1.75,1.75]}]},{"name":"1MFD","origin":[0,0],"package":{"style":"circle","dim":[5,5],"offset":[0,0]},"points":[{"pos":[1.25,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.25,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"LED","origin":[0,0],"package":{"style":"circle","dim":[5.4,5.4],"offset":[0,0]},"points":[{"pos":[1.5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.5,0],"drill":true,"pad":[1.75,1.75]}]}],"traces":[]}
+		
 		const canvas = document.getElementById("canvas")
 		const ctx = canvas.getContext("2d")
 		const textArea = document.getElementById("text-area")
-		
-		json = {
-			"config" : {
-				"scale" : 6,
-				"windowPos" : [0,0],
-				"boardX" : 70.4,
-				"boardY" : 101,
-				"showNames" : false,
-				"showPackage" : false
-			},
-			"devices" : [
-				{
-					"name" : "Resistor",
-					"origin" : [10,10],
-                    "package" : {
-                        style : "rect",
-                        dim: [4, 1],
-                        offset: [0,0]
-                    },
-                    "points" : [
-						{
-							pos : [2, 0],
-							drill : true,
-							pad: [1.75, 1.75],
-						},
-                        {
-                            pos : [-2, 0],
-							drill : true,
-							pad: [1.75, 1.75],
-                        },
-					],
-				},
-			],
-			"traces" : [],
-		}
-		
-		let devices = []
+
+		let selectedIndex = null
 
 		class Device {
 			constructor(index, JSONDevice) {
@@ -59,8 +27,10 @@
 			}
 
             rotate() {
-                json.devices[this.index].package.dim.reverse()
-				json.devices[this.index].package.offset.reverse()
+				if (this.pk) {
+					json.devices[this.index].package.dim.reverse()
+					json.devices[this.index].package.offset.reverse()
+				}
 				for (let point of json.devices[this.index].points) {
 					point.pos.reverse()
 					point.pad.reverse()
@@ -68,7 +38,13 @@
                 render()
             }
 
-            // convert to canvas space
+			translate(offset) {
+				json.devices[this.index].origin[0] += offset[0]
+				json.devices[this.index].origin[1] += offset[1]
+				render()
+			}
+
+            // convert point to canvas space
             convert(coordinates, scale, windowPos=[0,0]) {
                 return [
                     (coordinates[0] * scale) + windowPos[0], 
@@ -76,74 +52,107 @@
                 ]
             }
 
-			draw(scale, windowPos, showNames, showPackage) {
+			draw(scale, windowPos, showNames, showPackages, selectedIndex, showCoordinates) {
 
-                // origin calculation
-                let cOrigin = this.convert(this.origin, scale, windowPos)
+                // origin calculations
+                let deviceOrigin = this.convert(this.origin, scale, windowPos)
+                let wcsOrigin = [windowPos[0], windowPos[1]]
                 
 				// name
 				if (showNames) {
+					ctx.fillStyle = "white"
 					ctx.beginPath()
 					ctx.font = `${1 * scale}px monospace`
-					ctx.fillText(this.name, cOrigin[0], cOrigin[1])
+					ctx.fillText(this.name, deviceOrigin[0], deviceOrigin[1])
 				}
 
 				// package/origin
-				if (showPackage) {
+				if (showPackages) {
 
 					//origin
 					ctx.fillStyle = "red"
 					ctx.beginPath()
-					ctx.rect(cOrigin[0], 
-					cOrigin[1], 1, 1)
+					ctx.arc(
+						deviceOrigin[0],
+						deviceOrigin[1],
+						0.05 * scale, 
+						0, 
+						2 * Math.PI
+					)
 					ctx.fill()
 
-					// rect package
-					if (this.pk.style == "rect") {
+                    // origin coordinates
+                    if (showCoordinates) {
+                        ctx.fillStyle = "red"
 						ctx.beginPath()
-						ctx.rect(
-							cOrigin[0] - (this.pk.dim[0] * 0.5 * scale), 
-							cOrigin[1] - (this.pk.dim[1] * 0.5 * scale), 
-							this.pk.dim[0]*scale,
-							this.pk.dim[1]*scale
-						)
-						ctx.stroke()
-					}
-					// circle package
-					else if (this.pk.style == "circle") {
-						ctx.beginPath()
-						ctx.arc(
-							this.originX+this.packageOffsetX, 
-							this.originY+this.packageOffsetY, 
-							this.packageX*scale, 0, 2*Math.PI
-						)
-						ctx.stroke()
+						ctx.font = `${0.5 * scale}px monospace`
+						ctx.fillText(`[${this.origin[0]},${this.origin[1]}]`, deviceOrigin[0], deviceOrigin[1])
+                    }
+
+					// if package information exists
+					if (this.pk) {
+						// rect package
+						if (this.pk.style == "rect") {
+							ctx.strokeStyle = "red"
+							ctx.beginPath()
+							ctx.rect(
+								deviceOrigin[0] - (this.pk.dim[0] * 0.5 * scale), 
+								deviceOrigin[1] - (this.pk.dim[1] * 0.5 * scale), 
+								this.pk.dim[0]*scale,
+								this.pk.dim[1]*scale
+							)
+							ctx.stroke()
+						}
+						// circle package
+						else if (this.pk.style == "circle") {
+							ctx.strokeStyle = "red"
+							ctx.beginPath()
+							ctx.arc(
+								deviceOrigin[0],
+								deviceOrigin[1], 
+								this.pk.dim[0]/2*scale, 
+								0, 
+								2*Math.PI
+							)
+							ctx.stroke()
+						}
 					}
 				}
 
                 // points 
                 for (let point of this.points) {
 
-					// connections
+					// point calculation
                     let cPoint = this.convert(point.pos, scale)
-					ctx.fillStyle = "white"
-					ctx.beginPath()
-					ctx.rect(
-						cOrigin[0] + cPoint[0], 
-						cOrigin[1] + cPoint[1], 
-						1,
-						1,
-					)
-					ctx.fill()
+
+					// connections
+					if (showPackages) {
+						ctx.fillStyle = "yellow"
+						ctx.beginPath()
+						ctx.arc(
+						deviceOrigin[0] + cPoint[0], 
+						deviceOrigin[1] + cPoint[1], 
+						0.05 * scale, 
+						0, 
+						2 * Math.PI)
+						ctx.fill()
+					}
+
+					if (showCoordinates) {
+						ctx.fillStyle = "red"
+						ctx.beginPath()
+						ctx.font = `${0.5 * scale}px monospace`
+						ctx.fillText(`[${this.origin[0] + point.pos[0]},${this.origin[1] + point.pos[1]}]`, deviceOrigin[0] + cPoint[0], deviceOrigin[1] + cPoint[1])
+					}
 
 					// holes
                     if (point.drill) {
-                        ctx.strokeStyle = "white"
+                        ctx.strokeStyle = selectedIndex == this.index ? "green" : "white"
                         ctx.beginPath()
                         // 0.5 drill RADIUS
                         ctx.arc(
-							cOrigin[0] + cPoint[0], 
-							cOrigin[1] + cPoint[1], 
+							deviceOrigin[0] + cPoint[0], 
+							deviceOrigin[1] + cPoint[1], 
 							0.5 * scale, 
 							0, 
 							2 * Math.PI)
@@ -151,11 +160,11 @@
                     }
 
 					//pads
-					ctx.strokeStyle = "white"
+					ctx.strokeStyle = selectedIndex == this.index ? "green" : "white"
 					ctx.beginPath()
 					ctx.rect(
-						cOrigin[0] + cPoint[0] - (point.pad[0] * 0.5 * scale), 
-						cOrigin[1] + cPoint[1] - (point.pad[1] * 0.5 * scale), 
+						deviceOrigin[0] + cPoint[0] - (point.pad[0] * 0.5 * scale), 
+						deviceOrigin[1] + cPoint[1] - (point.pad[1] * 0.5 * scale), 
 						point.pad[0] * scale, 
 						point.pad[1] * scale)
 					ctx.stroke()
@@ -164,75 +173,106 @@
 			}
 		}
 
-		for (const [index, device] of json.devices.entries()) {
-			devices.push(new Device(index, device))
-		}
-
-		function zoom(multiplier) {
-			json.config.scale = json.config.scale * multiplier
-			render()
-		}
+        let devices = []
 
 		function render() {
+
+            // creates devices from json
+			devices = []
+		    for (const [index, device] of json.devices.entries()) {
+			    devices.push(new Device(index, device))
+		    }
+
 			// update text area to recent json
 			textArea.textContent = JSON.stringify(json)
 			// clears canvas
 			ctx.clearRect(0, 0, canvas.width, canvas.height)
 
 			// draws board
-			ctx.strokeStyle = "red"
+			ctx.strokeStyle = "white"
 			ctx.beginPath()
 			ctx.rect(json.config.windowPos[0], json.config.windowPos[1], json.config.boardX*json.config.scale, json.config.boardY*json.config.scale)
 			ctx.stroke()
 
 			// draws devices
 			for (let device of devices) {
-				device.draw(json.config.scale, json.config.windowPos,json.config.showNames, json.config.showPackage)
+				device.draw(json.config.scale, json.config.windowPos,json.config.showNames, json.config.showPackages, selectedIndex, json.config.showCoordinates)
 			}
 		}
 
-		render()
-		
-		// keyboard navigation
-		let movementFactor = 1
-		document.addEventListener("keydown", (e) => {
-			switch (e.key) {
-				case "ArrowUp":
-					e.preventDefault()
-					json.config.windowPos[1]+=movementFactor*json.config.scale
-					render()
+		// cmd line functions
+		function zoomin() {
+			json.config.scale = json.config.scale * 2
+			render()
+		}
+
+		function zoomout() {
+			json.config.scale = json.config.scale * 0.5
+			render()
+		}
+
+        function zoomreset() {
+            json.config.scale = 1
+            json.config.windowPos = [0,0]
+            render()
+        }
+
+		function shownames() {
+			json.config.showNames = !json.config.showNames
+			render()
+		}
+
+		function showpackages() {
+			json.config.showPackages = !json.config.showPackages
+			render()
+		}
+
+		function showcoordinates() {
+			json.config.showCoordinates = !json.config.showCoordinates
+			render()
+		}
+
+		function selectdevice(index) {
+			selectedIndex = index
+            console.log(devices[selectedIndex].name)
+			render()
+		}
+
+		function rotate() {
+			devices[selectedIndex].rotate()
+		}
+
+        function translate(offset) {
+            devices[selectedIndex].translate(offset)
+        }
+
+		let up = "up"
+		let right = "right"
+		let left = "left"
+		let down = "down"
+		function pan(direction) {
+			switch (direction) {
+				case "down":
+					json.config.windowPos[1]-=json.config.scale
 					break
-				case "ArrowDown":
-					e.preventDefault()
-					json.config.windowPos[1]-=movementFactor*json.config.scale
-					render()
+				case "left":
+					json.config.windowPos[0]+=json.config.scale
 					break
-				case "ArrowLeft":
-					e.preventDefault()
-					json.config.windowPos[0]+=movementFactor*json.config.scale
-					render()
+				case "right":
+					json.config.windowPos[0]-=json.config.scale
 					break
-				case "ArrowRight":
-					e.preventDefault()
-					json.config.windowPos[0]-=movementFactor*json.config.scale
-					render()
-					break
-				case "=":
-					zoom(2)
-					break
-				case "-": 
-					zoom(0.5)
-					break 
-				case "n":
-					json.config.showNames = !json.config.showNames
-					render()
-					break
-				case "p":
-					json.config.showPackage = !json.config.showPackage
-					render()
+				case "up":
+					json.config.windowPos[1]+=json.config.scale
 					break
 			}
-		})
+			render()
+		}
+
+		function save() {
+			console.log(JSON.stringify(json))
+		}
+
+		render()
 		
 	</script>
 </html>
