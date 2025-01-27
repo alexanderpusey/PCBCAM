@@ -2,20 +2,25 @@
 <html>
 	<head>
 		<title>PCBCAM</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+		</style>
 	</head>
-	<body style="background-color: black">
+	<body style="background-color: gray; overflow: hidden">
 		<canvas id="canvas" width=700 height=700 style="background-color: black;"></canvas>
-		<textarea readonly id="text-area" style="width: 700px; height: 700px; background-color: black; color: white; resize: none; font-family: monospace; font-size: 15px; border: none"></textarea>
 	</body>
 	<script>
-		json = 
-        {"config":{"scale":1,"windowPos":[0,0],"boardX":70.4,"boardY":101,"showNames":true,"showPackages":true,"showCoordinates":true},"devices":[{"name":"555 Timer","origin":[0,0],"package":{"style":"rect","dim":[6.2,9.3],"offset":[0,0]},"points":[{"pos":[-3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-3.6],"drill":true,"pad":[1.75,1.75]}]},{"name":"5V","origin":[0,0],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"GND","origin":[0,0],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"1KOHM","origin":[0,0],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"100KOHM","origin":[0,0],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"220OHM","origin":[0,0],"package":{"style":"rect","dim":[2.25,6.3],"offset":[0,0]},"points":[{"pos":[0,5],"drill":true,"pad":[1.75,1.75]},{"pos":[0,-5],"drill":true,"pad":[1.75,1.75]}]},{"name":"1MFD","origin":[0,0],"package":{"style":"circle","dim":[5,5],"offset":[0,0]},"points":[{"pos":[1.25,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.25,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"LED","origin":[0,0],"package":{"style":"circle","dim":[5.4,5.4],"offset":[0,0]},"points":[{"pos":[1.5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.5,0],"drill":true,"pad":[1.75,1.75]}]}],"traces":[]}
-		
 		const canvas = document.getElementById("canvas")
 		const ctx = canvas.getContext("2d")
-		const textArea = document.getElementById("text-area")
 
-		let selectedIndex = null
+		json = 
+		{"config":{"scale":16,"windowPos":[16,48],"boardX":70.4,"boardY":101,"showNames":false,"showPackages":true,"showCoordinates":false,"showAxes":true,"showNumbers":true},"devices":[{"name":"555 Timer","origin":[20,20],"package":{"style":"rect","dim":[6.2,9.3],"offset":[0,0]},"points":[{"pos":[-3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,3.6],"drill":true,"pad":[1.75,1.75]}]},{"name":"5V","origin":[25,10],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"GND","origin":[15,10],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"1KOHM","origin":[35,16],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"100KOHM","origin":[35,20],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"220OHM","origin":[10,25],"package":{"style":"rect","dim":[2.25,6.3],"offset":[0,0]},"points":[{"pos":[0,5],"drill":true,"pad":[1.75,1.75]},{"pos":[0,-5],"drill":true,"pad":[1.75,1.75]}]},{"name":"1MFD","origin":[10,17],"package":{"style":"circle","dim":[5,5],"offset":[0,0]},"points":[{"pos":[1.25,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.25,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"LED","origin":[20,30],"package":{"style":"circle","dim":[5.4,5.4],"offset":[0,0]},"points":[{"pos":[1.5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.5,0],"drill":true,"pad":[1.75,1.75]}]}],"traces":[]}
+
+		let devices = []
+		let selectedDevices = []
 
 		class Device {
 			constructor(index, JSONDevice) {
@@ -33,18 +38,31 @@
 				}
 				for (let point of json.devices[this.index].points) {
 					point.pos.reverse()
+					point.pos[0] = -point.pos[0]
 					point.pad.reverse()
 				}
-                render()
+				render()
             }
 
-			translate(offset) {
-				json.devices[this.index].origin[0] += offset[0]
-				json.devices[this.index].origin[1] += offset[1]
+			translate(x, y) {
+				json.devices[this.index].origin[0] += x
+				json.devices[this.index].origin[1] += y
 				render()
 			}
 
-            // convert point to canvas space
+			move(x, y) {
+				json.devices[this.index].origin = [x,y]
+				render()
+			}
+
+			alignpoints(selfPointIndex, targetPoint) {
+				
+				let selfoffset = this.points[selfPointIndex].pos
+				console.log(selfoffset)
+				console.log(targetPoint)
+				render()
+			}
+
             convert(coordinates, scale, windowPos=[0,0]) {
                 return [
                     (coordinates[0] * scale) + windowPos[0], 
@@ -52,7 +70,7 @@
                 ]
             }
 
-			draw(scale, windowPos, showNames, showPackages, selectedIndex, showCoordinates) {
+			draw(scale, windowPos, showNames, showPackages, showCoordinates, showNumbers) {
 
                 // origin calculations
                 let deviceOrigin = this.convert(this.origin, scale, windowPos)
@@ -63,7 +81,7 @@
 					ctx.fillStyle = "white"
 					ctx.beginPath()
 					ctx.font = `${1 * scale}px monospace`
-					ctx.fillText(this.name, deviceOrigin[0], deviceOrigin[1])
+					ctx.fillText(`[${this.index}]${this.name}`, deviceOrigin[0], deviceOrigin[1])
 				}
 
 				// package/origin
@@ -120,9 +138,10 @@
 				}
 
                 // points 
-                for (let point of this.points) {
+                for (let i = 0; i < this.points.length; i ++) {
 
-					// point calculation
+					let point = this.points[i]
+
                     let cPoint = this.convert(point.pos, scale)
 
 					// connections
@@ -138,6 +157,12 @@
 						ctx.fill()
 					}
 
+					if (showNumbers) {
+						ctx.font = `${0.5 * scale}px monospace`
+						ctx.fillText(i + 1, deviceOrigin[0] + cPoint[0], deviceOrigin[1] + cPoint[1])
+					}
+
+					// point coordinates
 					if (showCoordinates) {
 						ctx.fillStyle = "red"
 						ctx.beginPath()
@@ -147,7 +172,7 @@
 
 					// holes
                     if (point.drill) {
-                        ctx.strokeStyle = selectedIndex == this.index ? "green" : "white"
+                        ctx.strokeStyle = "white"
                         ctx.beginPath()
                         // 0.5 drill RADIUS
                         ctx.arc(
@@ -160,7 +185,7 @@
                     }
 
 					//pads
-					ctx.strokeStyle = selectedIndex == this.index ? "green" : "white"
+					ctx.strokeStyle = "white"
 					ctx.beginPath()
 					ctx.rect(
 						deviceOrigin[0] + cPoint[0] - (point.pad[0] * 0.5 * scale), 
@@ -173,9 +198,9 @@
 			}
 		}
 
-        let devices = []
-
 		function render() {
+			// clears canvas
+			ctx.clearRect(0, 0, canvas.width, canvas.height)
 
             // creates devices from json
 			devices = []
@@ -183,24 +208,38 @@
 			    devices.push(new Device(index, device))
 		    }
 
-			// update text area to recent json
-			textArea.textContent = JSON.stringify(json)
-			// clears canvas
-			ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-			// draws board
+			// board boundary
 			ctx.strokeStyle = "white"
 			ctx.beginPath()
 			ctx.rect(json.config.windowPos[0], json.config.windowPos[1], json.config.boardX*json.config.scale, json.config.boardY*json.config.scale)
 			ctx.stroke()
 
-			// draws devices
+			// axes
+			if (json.config.showAxes) {
+				ctx.fillStyle="white"
+				ctx.font = `${0.5 * json.config.scale}px monospace`
+				for (i = 0; i <= Math.floor(json.config.boardX); i += 10) {
+					ctx.fillText(i, json.config.windowPos[0] + i * json.config.scale, json.config.windowPos[1] + 1 * json.config.scale)
+				}
+				for (i = 0; i <= Math.floor(json.config.boardY); i += 10) {
+					ctx.fillText(i, json.config.windowPos[0] + 0.5 * json.config.scale, json.config.windowPos[1] + i * json.config.scale)
+				}
+			}
+
+			// draw devices
 			for (let device of devices) {
-				device.draw(json.config.scale, json.config.windowPos,json.config.showNames, json.config.showPackages, selectedIndex, json.config.showCoordinates)
+				device.draw(
+					json.config.scale, 
+					json.config.windowPos, 
+					json.config.showNames, 
+					json.config.showPackages,
+					json.config.showCoordinates,
+					json.config.showNumbers
+				)
 			}
 		}
 
-		// cmd line functions
+		// navigation
 		function zoomin() {
 			json.config.scale = json.config.scale * 2
 			render()
@@ -211,45 +250,12 @@
 			render()
 		}
 
-        function zoomreset() {
+        function resetzoom() {
             json.config.scale = 1
             json.config.windowPos = [0,0]
             render()
         }
 
-		function shownames() {
-			json.config.showNames = !json.config.showNames
-			render()
-		}
-
-		function showpackages() {
-			json.config.showPackages = !json.config.showPackages
-			render()
-		}
-
-		function showcoordinates() {
-			json.config.showCoordinates = !json.config.showCoordinates
-			render()
-		}
-
-		function selectdevice(index) {
-			selectedIndex = index
-            console.log(devices[selectedIndex].name)
-			render()
-		}
-
-		function rotate() {
-			devices[selectedIndex].rotate()
-		}
-
-        function translate(offset) {
-            devices[selectedIndex].translate(offset)
-        }
-
-		let up = "up"
-		let right = "right"
-		let left = "left"
-		let down = "down"
 		function pan(direction) {
 			switch (direction) {
 				case "down":
@@ -268,9 +274,75 @@
 			render()
 		}
 
-		function save() {
-			console.log(JSON.stringify(json))
+
+		// layer visibility
+		function shownames() {
+			json.config.showNames = !json.config.showNames
+			render()
 		}
+
+		function showpackages() {
+			json.config.showPackages = !json.config.showPackages
+			render()
+		}
+
+		function showcoordinates() {
+			json.config.showCoordinates = !json.config.showCoordinates
+			render()
+		}
+
+		function showaxes() {
+			json.config.showAxes = !json.config.showAxes
+			render()
+		}
+
+		function shownumbers() {
+			json.config.showNumbers = !json.config.showNumbers
+			render()
+		}
+
+
+		// devices
+		function move(selected = selectedDevices, x = 0, y = 0) {
+			selected.forEach((index) => devices[index].move(x, y))
+		}
+
+		function translate(selected = selectedDevices, x = 0, y = 0) {
+			selected.forEach((index)=> devices[index].translate(x,y))
+		}
+
+		function rotate(selected = selectedDevices) {
+			selected.forEach((index) => devices[index].rotate())
+		}
+
+
+		// "save"
+		function save() { console.log(JSON.stringify(json)) }
+
+
+		// keybinds
+		document.addEventListener("keydown", (e) => {
+			switch(e.key) {
+				case "ArrowDown":
+					pan("down")
+					break
+				case "ArrowLeft":
+					pan("left")
+					break
+				case "ArrowRight":
+					pan("right")
+					break
+				case "ArrowUp":
+					pan("up")
+					break
+				case "-":
+					zoomout()
+					break
+				case "=":
+					zoomin()
+					break
+			}
+		})
 
 		render()
 		
