@@ -17,7 +17,7 @@
 		const ctx = canvas.getContext("2d")
 
 		json = 
-		{"config":{"scale":16,"windowPos":[16,48],"boardX":70.4,"boardY":101,"showNames":false,"showPackages":true,"showCoordinates":false,"showAxes":true,"showNumbers":true},"devices":[{"name":"555 Timer","origin":[20,20],"package":{"style":"rect","dim":[6.2,9.3],"offset":[0,0]},"points":[{"pos":[-3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,3.6],"drill":true,"pad":[1.75,1.75]}]},{"name":"5V","origin":[25,10],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"GND","origin":[15,10],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"1KOHM","origin":[35,16],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"100KOHM","origin":[35,20],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"220OHM","origin":[10,25],"package":{"style":"rect","dim":[2.25,6.3],"offset":[0,0]},"points":[{"pos":[0,5],"drill":true,"pad":[1.75,1.75]},{"pos":[0,-5],"drill":true,"pad":[1.75,1.75]}]},{"name":"1MFD","origin":[10,17],"package":{"style":"circle","dim":[5,5],"offset":[0,0]},"points":[{"pos":[1.25,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.25,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"LED","origin":[20,30],"package":{"style":"circle","dim":[5.4,5.4],"offset":[0,0]},"points":[{"pos":[1.5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.5,0],"drill":true,"pad":[1.75,1.75]}]}],"traces":[]}
+		{"config":{"scale":16,"windowPos":[-32,0],"boardX":70.4,"boardY":101,"showNames":true,"showPackages":true,"showCoordinates":false,"showAxes":true,"showNumbers":true},"devices":[{"name":"555 Timer","origin":[20,20],"package":{"style":"rect","dim":[6.2,9.3],"offset":[0,0]},"points":[{"pos":[-3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,3.6],"drill":true,"pad":[1.75,1.75]}]},{"name":"5V","origin":[22.25,11.399999999999999],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"GND","origin":[16.25,16.4],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"1KOHM","origin":[31,16.4],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"100KOHM","origin":[31,21.2],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"220OHM","origin":[10,25],"package":{"style":"rect","dim":[2.25,6.3],"offset":[0,0]},"points":[{"pos":[0,-5],"drill":true,"pad":[1.75,1.75]},{"pos":[0,5],"drill":true,"pad":[1.75,1.75]}]},{"name":"1MFD","origin":[10,18.8],"package":{"style":"circle","dim":[5,5],"offset":[0,0]},"points":[{"pos":[1.25,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.25,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"LED","origin":[20,30],"package":{"style":"circle","dim":[5.4,5.4],"offset":[0,0]},"points":[{"pos":[-1.5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[1.5,0],"drill":true,"pad":[1.75,1.75]}]}],"traces":[]}
 
 		let devices = []
 		let selectedDevices = []
@@ -55,12 +55,18 @@
 				render()
 			}
 
-			alignpoints(selfPointIndex, targetPoint) {
-				
-				let selfoffset = this.points[selfPointIndex].pos
-				console.log(selfoffset)
-				console.log(targetPoint)
-				render()
+			alignpoints(selfPointIndex, targetDevice, targetPointIndex) {
+				let selfX = this.points[selfPointIndex - 1].pos[0] + this.origin[0]
+				let selfY = this.points[selfPointIndex - 1].pos[1] + this.origin[1]
+
+				let targetX = targetDevice.points[targetPointIndex - 1].pos[0] + targetDevice.origin[0] 
+				let targetY = targetDevice.points[targetPointIndex - 1].pos[1] + targetDevice.origin[1]
+
+				let xDistance = Math.abs(selfX - targetX)
+				let yDistance = Math.abs(selfY - targetY)
+
+				if (xDistance > yDistance) { this.translate(0, yDistance) }
+				else { this.translate(xDistance, 0) }
 			}
 
             convert(coordinates, scale, windowPos=[0,0]) {
