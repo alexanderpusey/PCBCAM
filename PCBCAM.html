@@ -16,249 +16,197 @@
 		const canvas = document.getElementById("canvas")
 		const ctx = canvas.getContext("2d")
 
-		json = 
-		{"config":{"scale":16,"windowPos":[152,72],"boardX":70.4,"boardY":101,"showNames":false,"showPackages":true,"showCoordinates":false,"showAxes":true,"showNumbers":false},"devices":[{"name":"555 Timer","origin":[20,20],"package":{"style":"rect","dim":[6.2,9.3],"offset":[0,0]},"points":[{"pos":[-3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[-3.75,3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-3.6],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,-1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,1.2],"drill":true,"pad":[1.75,1.75]},{"pos":[3.75,3.6],"drill":true,"pad":[1.75,1.75]}]},{"name":"5V","origin":[23.75,10],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"GND","origin":[16.25,10],"points":[{"pos":[0,0],"drill":false,"pad":[7,7]}]},{"name":"1KOHM","origin":[35,16.4],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"100KOHM","origin":[35,21.2],"package":{"style":"rect","dim":[6.3,2.25],"offset":[0,0]},"points":[{"pos":[-5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[5,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"220OHM","origin":[8.75,27],"package":{"style":"rect","dim":[2.25,6.3],"offset":[0,0]},"points":[{"pos":[0,-5],"drill":true,"pad":[1.75,1.75]},{"pos":[0,5],"drill":true,"pad":[1.75,1.75]}]},{"name":"1MFD","origin":[10,18.8],"package":{"style":"circle","dim":[5,5],"offset":[0,0]},"points":[{"pos":[1.25,0],"drill":true,"pad":[1.75,1.75]},{"pos":[-1.25,0],"drill":true,"pad":[1.75,1.75]}]},{"name":"LED","origin":[20,32],"package":{"style":"circle","dim":[5.4,5.4],"offset":[0,0]},"points":[{"pos":[-1.5,0],"drill":true,"pad":[1.75,1.75]},{"pos":[1.5,0],"drill":true,"pad":[1.75,1.75]}]}],"traces":[]}
+		json = {"config":{"iterator":0,"scale":16,"windowPos":[32,48],"boardX":70.4,"boardY":101,"showCoordinates":false,"showIds":true,"showGeometry":true,"showToolpaths":true},"devices":[],"points":[],"traces":[]}
 
-		let devices = []
-		let selectedDevices = []
-
-		class Device {
-			constructor(index, JSONDevice) {
-				this.index = index
-				this.name = JSONDevice.name
-                this.origin = JSONDevice.origin
-				this.pk = JSONDevice.package
-                this.points = JSONDevice.points
-			}
-
-            rotate() {
-				if (this.pk) {
-					json.devices[this.index].package.dim.reverse()
-					json.devices[this.index].package.offset.reverse()
-				}
-				for (let point of json.devices[this.index].points) {
-					point.pos.reverse()
-					point.pos[0] = -point.pos[0]
-					point.pad.reverse()
-				}
-				render()
-            }
-
-			move(x, y) {
-				json.devices[this.index].origin = [x,y]
-				render()
-			}
-
-			alignpoints(selfPointIndex, targetDevice, targetPointIndex) {
-				let selfX = this.points[selfPointIndex - 1].pos[0] + this.origin[0]
-				let selfY = this.points[selfPointIndex - 1].pos[1] + this.origin[1]
-
-				let targetX = targetDevice.points[targetPointIndex - 1].pos[0] + targetDevice.origin[0] 
-				let targetY = targetDevice.points[targetPointIndex - 1].pos[1] + targetDevice.origin[1]
-
-				let xDistance = Math.abs(selfX - targetX)
-				let yDistance = Math.abs(selfY - targetY)
-
-
-
-				if (xDistance > yDistance) { this.move(this.origin[0], targetY) }
-				else { this.move(targetX, this.origin[1]) }
-			}
-
-            convert(coordinates, scale, windowPos=[0,0]) {
+		// convert coordinates to window space
+        function convert(coordinates) {
                 return [
-                    (coordinates[0] * scale) + windowPos[0], 
-                    (coordinates[1] * scale) + windowPos[1]
+                    (coordinates[0] * json.config.scale) + json.config.windowPos[0], 
+                    (coordinates[1] * json.config.scale) + json.config.windowPos[1]
                 ]
+        }
+
+        // lookup
+        function reference(id) {
+            let found = {
+                obj : null,
+                index : null
             }
-
-			draw(scale, windowPos, showNames, showPackages, showCoordinates, showNumbers) {
-
-                // origin calculations
-                let deviceOrigin = this.convert(this.origin, scale, windowPos)
-                let wcsOrigin = [windowPos[0], windowPos[1]]
-                
-				// name
-				if (showNames) {
-					ctx.fillStyle = "white"
-					ctx.beginPath()
-					ctx.font = `${1 * scale}px monospace`
-					ctx.fillText(`[${this.index}]${this.name}`, deviceOrigin[0], deviceOrigin[1])
-				}
-
-				// package/origin
-				if (showPackages) {
-
-					//origin
-					ctx.fillStyle = "red"
-					ctx.beginPath()
-					ctx.arc(
-						deviceOrigin[0],
-						deviceOrigin[1],
-						0.05 * scale, 
-						0, 
-						2 * Math.PI
-					)
-					ctx.fill()
-
-                    // origin coordinates
-                    if (showCoordinates) {
-                        ctx.fillStyle = "red"
-						ctx.beginPath()
-						ctx.font = `${0.5 * scale}px monospace`
-						ctx.fillText(`[${this.origin[0]},${this.origin[1]}]`, deviceOrigin[0], deviceOrigin[1])
-                    }
-
-					// if package information exists
-					if (this.pk) {
-						// rect package
-						if (this.pk.style == "rect") {
-							ctx.strokeStyle = "red"
-							ctx.beginPath()
-							ctx.rect(
-								deviceOrigin[0] - (this.pk.dim[0] * 0.5 * scale), 
-								deviceOrigin[1] - (this.pk.dim[1] * 0.5 * scale), 
-								this.pk.dim[0]*scale,
-								this.pk.dim[1]*scale
-							)
-							ctx.stroke()
-						}
-						// circle package
-						else if (this.pk.style == "circle") {
-							ctx.strokeStyle = "red"
-							ctx.beginPath()
-							ctx.arc(
-								deviceOrigin[0],
-								deviceOrigin[1], 
-								this.pk.dim[0]/2*scale, 
-								0, 
-								2*Math.PI
-							)
-							ctx.stroke()
-						}
-					}
-				}
-
-                // points 
-                for (let i = 0; i < this.points.length; i ++) {
-
-					let point = this.points[i]
-
-                    let cPoint = this.convert(point.pos, scale)
-
-					// connections
-					if (showPackages) {
-						ctx.fillStyle = "yellow"
-						ctx.beginPath()
-						ctx.arc(
-						deviceOrigin[0] + cPoint[0], 
-						deviceOrigin[1] + cPoint[1], 
-						0.05 * scale, 
-						0, 
-						2 * Math.PI)
-						ctx.fill()
-					}
-
-					if (showNumbers) {
-						ctx.font = `${0.5 * scale}px monospace`
-						ctx.fillText(i + 1, deviceOrigin[0] + cPoint[0], deviceOrigin[1] + cPoint[1])
-					}
-
-					// point coordinates
-					if (showCoordinates) {
-						ctx.fillStyle = "red"
-						ctx.beginPath()
-						ctx.font = `${0.5 * scale}px monospace`
-						let xPos = this.origin[0] + point.pos[0]
-						let yPos = this.origin[1] + point.pos[1]
-						ctx.fillText(`[${xPos},${yPos}]`, deviceOrigin[0] + cPoint[0], deviceOrigin[1] + cPoint[1])
-					}
-
-					// holes
-                    if (point.drill) {
-                        ctx.strokeStyle = "white"
-                        ctx.beginPath()
-                        // 0.5 drill RADIUS
-                        ctx.arc(
-							deviceOrigin[0] + cPoint[0], 
-							deviceOrigin[1] + cPoint[1], 
-							0.5 * scale, 
-							0, 
-							2 * Math.PI)
-                        ctx.stroke()
-                    }
-
-					//pads
-					ctx.strokeStyle = "white"
-					ctx.beginPath()
-					ctx.rect(
-						deviceOrigin[0] + cPoint[0] - (point.pad[0] * 0.5 * scale), 
-						deviceOrigin[1] + cPoint[1] - (point.pad[1] * 0.5 * scale), 
-						point.pad[0] * scale, 
-						point.pad[1] * scale)
-					ctx.stroke()
+            let foundIndex = null
+            json.points.forEach((p, index) => {
+                if (p.id == id) {
+                    found.obj = p
+                    found.index = index
                 }
+            })
+            if (found.obj) {
+                return found
+            }
+            else {
+                throw Error(`Failed to reference id: ${id}`)
+            }
+        }
 
-			}
-		}
+		// iterating id
+		function id() {
+            let id = json.config.iterator
+            json.config.iterator += 1
+            return id 
+        }
+
+		function newpoint(posX, posY, drill=false, padX=0, padY=0) {
+            let point = {
+                    "id" : id(),
+                    "pos" : [posX, posY],
+                    "drill" : drill,
+                    "pad" : [padX, padY]
+                }
+            json.points.push(point)
+            render()
+            return point
+        }
+
+		function newtrace(width, p1, p2, ...ps) {
+            let trace = {
+                    "id" : id(),
+                    "width" : width,
+                    "points" : [p1, p2],
+                }
+            ps.forEach(p => { trace.points.push(p)})
+            json.traces.push(trace)
+            render()
+            return trace
+        }
+
+		function deletepoint(...ids) {
+            for (const id of ids) {
+                json.points.splice(reference(id).index, 1)
+            }
+            render()
+        }
+
+		function deleteTrace(...ids) {
+            for (const id of ids) {
+                json.traces.splice(reference(id).index, 1)
+            }
+            render()
+        }
 
 		function render() {
+
+			let scale = json.config.scale
+
 			// clears canvas
 			ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-            // creates devices from json
-			devices = []
-		    for (const [index, device] of json.devices.entries()) {
-			    devices.push(new Device(index, device))
-		    }
 
 			// board boundary
 			ctx.strokeStyle = "white"
 			ctx.beginPath()
-			ctx.rect(json.config.windowPos[0], json.config.windowPos[1], json.config.boardX*json.config.scale, json.config.boardY*json.config.scale)
+			ctx.rect(json.config.windowPos[0], json.config.windowPos[1], json.config.boardX*scale, json.config.boardY*scale)
 			ctx.stroke()
 
 			// axes
-			if (json.config.showAxes) {
-				ctx.fillStyle="white"
-				ctx.font = `${0.5 * json.config.scale}px monospace`
-				for (i = 0; i <= Math.floor(json.config.boardX); i += 10) {
-					ctx.fillText(i, json.config.windowPos[0] + i * json.config.scale, json.config.windowPos[1] + 1 * json.config.scale)
-				}
-				for (i = 0; i <= Math.floor(json.config.boardY); i += 10) {
-					ctx.fillText(i, json.config.windowPos[0] + 0.5 * json.config.scale, json.config.windowPos[1] + i * json.config.scale)
-				}
+			ctx.fillStyle="white"
+			ctx.font = `${0.5 * scale}px monospace`
+			for (i = 0; i <= Math.floor(json.config.boardX); i += 10) {
+				ctx.fillText(i, json.config.windowPos[0] + i * scale, json.config.windowPos[1] + 1 * scale)
+			}
+			for (i = 0; i <= Math.floor(json.config.boardY); i += 10) {
+				ctx.fillText(i, json.config.windowPos[0] + 0.5 * scale, json.config.windowPos[1] + i * scale)
 			}
 
-			// draw devices
-			for (let device of devices) {
-				device.draw(
-					json.config.scale, 
-					json.config.windowPos, 
-					json.config.showNames, 
-					json.config.showPackages,
-					json.config.showCoordinates,
-					json.config.showNumbers
-				)
+			if (json.config.showGeometry) {
+				// render points 
+				json.points.forEach(p => {
+
+					let cPoint = convert(p.pos)	
+
+					// point
+					ctx.fillStyle = "pink"
+					ctx.beginPath()
+					ctx.arc(...cPoint, 0.1 * scale, 0, 2*Math.PI)
+					ctx.fill()
+
+					// pad
+					ctx.strokeStyle = "white"
+					ctx.beginPath()
+					ctx.rect(
+						cPoint[0] - (p.pad[0] * 0.5 * scale), 
+						cPoint[1] - (p.pad[1] * 0.5 * scale), 
+						p.pad[0] * scale, 
+						p.pad[1] * scale)
+					ctx.stroke()
+
+					// hole
+					if (p.drill) {
+						ctx.strokeStyle = "white"
+						ctx.beginPath()
+						// 0.25 drill RADIUS
+						ctx.arc(...cPoint, 0.25 * scale, 0, 2 * Math.PI)
+						ctx.stroke()
+					}
+
+					// id text
+					if (json.config.showIds) {
+						ctx.font = `${1 * scale}px monospace`
+						ctx.fillText(`P${p.id}`, cPoint[0] + 3, cPoint[1] - 3)
+					}
+
+					// coordinates text
+					if (json.config.showCoordinates) {
+						ctx.fillStyle = "red"
+						ctx.beginPath()
+						ctx.font = `${0.5 * scale}px monospace`
+						ctx.fillText(`[${p.pos[0]},${p.pos[1]}]`, cPoint[0], cPoint[1])
+					}
+
+					})
+
+					// render traces
+					ctx.strokeStyle = "white"
+					json.traces.forEach((t, index) => {
+
+					ctx.beginPath()
+					ctx.moveTo(...convert(reference(t.points[0]).obj.pos))
+
+					for (let i = 1; i < t.points.length; i++) {
+						ctx.lineTo(...convert(reference(t.points[i]).obj.pos))
+					}
+					ctx.stroke()
+
+					})
 			}
+
+			if (json.config.showToolpaths) { }
+
 		}
-
-		// navigation
-		function zoomin() {
-			json.config.scale = json.config.scale * 2
+		
+		// layers and navigation
+		function shownames() {
+			json.config.showNames = !json.config.showNames
 			render()
 		}
 
-		function zoomout() {
-			json.config.scale = json.config.scale * 0.5
+		function showpackages() {
+			json.config.showPackages = !json.config.showPackages
 			render()
 		}
 
-        function resetzoom() {
-            json.config.scale = 1
-            json.config.windowPos = [0,0]
-            render()
-        }
+		function showcoordinates() {
+			json.config.showIds = false
+			json.config.showCoordinates = !json.config.showCoordinates
+			render()
+		}
+
+		function showids() {
+			json.config.showCoordinates = false
+			json.config.showIds = !json.config.showIds
+			render()
+		}
+
+		function showtoolpaths() {
+			json.config.showToolpaths = !json.config.showToolpaths
+		}
 
 		function pan(direction) {
 			switch (direction) {
@@ -278,51 +226,21 @@
 			render()
 		}
 
-
-		// layer visibility
-		function shownames() {
-			json.config.showNames = !json.config.showNames
+		function zoomin() {
+			json.config.scale = json.config.scale * 2
 			render()
 		}
 
-		function showpackages() {
-			json.config.showPackages = !json.config.showPackages
+		function zoomout() {
+			json.config.scale = json.config.scale * 0.5
 			render()
 		}
 
-		function showcoordinates() {
-			json.config.showCoordinates = !json.config.showCoordinates
-			render()
-		}
-
-		function showaxes() {
-			json.config.showAxes = !json.config.showAxes
-			render()
-		}
-
-		function shownumbers() {
-			json.config.showNumbers = !json.config.showNumbers
-			render()
-		}
-
-
-		// devices
-		function move(selected = selectedDevices, x = 0, y = 0) {
-			selected.forEach((index) => devices[index].move(x, y))
-		}
-
-		function translate(selected = selectedDevices, x = 0, y = 0) {
-			selected.forEach((index)=> devices[index].translate(x,y))
-		}
-
-		function rotate(selected = selectedDevices) {
-			selected.forEach((index) => devices[index].rotate())
-		}
-
-
-		// "save"
-		function save() { console.log(JSON.stringify(json)) }
-
+        function resetzoom() {
+            json.config.scale = 1
+            json.config.windowPos = [0,0]
+            render()
+        }
 
 		// keybinds
 		document.addEventListener("keydown", (e) => {
@@ -347,6 +265,9 @@
 					break
 			}
 		})
+
+		// save
+		function save() { console.log(JSON.stringify(json)) }
 
 		render()
 		
